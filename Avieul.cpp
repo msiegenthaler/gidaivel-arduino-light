@@ -149,3 +149,12 @@ void Avieul::announce(XBeeAddress to) {
 	_xbee->send(to, data, size);
 	free(data);
 }
+
+void Avieul::process() {
+	if (_xbee->available()) {
+		XBeeAddress from = 0;
+		uint8_t length = 0;
+		_xbee->receive(&from, (uint8_t**)&_buffer, &length);
+		handle(from, _buffer, length);
+	}
+}

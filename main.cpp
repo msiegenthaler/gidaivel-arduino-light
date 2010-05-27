@@ -2,6 +2,8 @@
 #include "arduino-xbee/Series1XBee.h"
 #include "arduino-xbee/ApiModeXBee.h"
 #include "arduino-xbee/NewSoftSerial/NewSoftSerial.h"
+#include "OnOffLightService.h"
+#include "Avieul.h"
 
 // general definitions
 extern "C" void __cxa_pure_virtual(void);
@@ -33,6 +35,9 @@ int xbeeSendPin = 9;
 NewSoftSerial serial = NewSoftSerial(xbeeRcvPin, xbeeSendPin, false);
 ApiModeXBee lowlevel = ApiModeXBee(&serial);
 Series1XBee xbee = Series1XBee(&lowlevel);
+OnOffLightService onOff = OnOffLightService(13);
+AvieulService* services[] = { &onOff };
+Avieul avieul = Avieul(&xbee, services, 1);
 
 void setup() {
 #ifdef DEBUG_PRINTS
@@ -47,18 +52,11 @@ void setup() {
 }
 
 void loop() {
-	byte data[] = {1, 2, 3, 4, 5};
-	xbee.send(123L, data, 5);
+	avieul.process();
 
 #ifdef DEBUG_PRINTS
-	Serial.println("Sent something");
+	Serial.println("Loop");
 #endif
-
-	int d = 1000;
-	digitalWrite(ledPin, HIGH);
-	delay(d / 2);
-	digitalWrite(ledPin, LOW);
-	delay(d / 2);
 }
 
 

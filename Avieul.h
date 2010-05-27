@@ -57,9 +57,12 @@ protected:
 class Avieul : public AvieulSender {
 public:
 	Avieul(Series1XBee *xbee, AvieulService **services, uint8_t service_count);
+	void process();
 
-	void handle(XBeeAddress from, uint8_t* data, uint8_t data_length);
 	void send(XBeeAddress to, uint8_t* data, uint8_t data_length);
+
+protected:
+	void handle(XBeeAddress from, uint8_t* data, uint8_t data_length);
 
 private:
 	void announce(XBeeAddress to);
@@ -67,6 +70,7 @@ private:
 	Series1XBee *_xbee;
 	AvieulService **_services;
 	uint8_t _services_count;
+	uint8_t _buffer[255];
 };
 
 
