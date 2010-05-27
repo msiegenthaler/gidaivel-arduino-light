@@ -3,7 +3,7 @@
 #include <WProgram.h>
 
 bool isBroadcastAddress(XBeeAddress address) {
-	return address == 0xFFFF;
+	return address == BROADCAST_ADDRESS;
 }
 
 
