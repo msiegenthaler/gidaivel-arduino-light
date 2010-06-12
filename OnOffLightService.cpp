@@ -13,6 +13,9 @@ bool OnOffLightService::processRequest(uint16_t requestType, XBeeAddress from, u
 		uint8_t data[] = { 0, 0, 0, 0, value };
 		fillResponseHeader(data, requestType);
 		_sender->send(from, data, 5);
+#ifdef DEBUG_ASRVS
+		Serial.println("OOL-srv: get light state");
+#endif
 		return true;
 	} else if (requestType == 0x02) {
 		//set value
@@ -21,6 +24,10 @@ bool OnOffLightService::processRequest(uint16_t requestType, XBeeAddress from, u
 		uint8_t data[] = { 0, 0, 0, 0, on ? 0x01 : 0x00 };
 		fillResponseHeader(data, requestType);
 		_sender->send(from, data, 5);
+#ifdef DEBUG_ASRVS
+		Serial.print("OOL-srv: set light to ");
+		Serial.println(on ? "on" : "off");
+#endif
 		return true;
 	} else if (requestType == 0x03) {
 		//switch value
@@ -29,8 +36,18 @@ bool OnOffLightService::processRequest(uint16_t requestType, XBeeAddress from, u
 		uint8_t data[] = { 0, 0, 0, 0, on ? 0x01 : 0x00 };
 		fillResponseHeader(data, requestType);
 		_sender->send(from, data, 5);
+#ifdef DEBUG_ASRVS
+		Serial.print("OOL-srv: switch light to ");
+		Serial.println(on ? "on" : "off");
+#endif
 		return true;
-	} else return false;
+	} else {
+#ifdef DEBUG_ASRVS
+		Serial.print("OOL-srv: unknown request 0x");
+		Serial.println(requestType, HEX);
+#endif
+		return false;
+	}
 }
 
 bool OnOffLightService::currentValue() {

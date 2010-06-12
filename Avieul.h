@@ -5,6 +5,9 @@
 #import "arduino-xbee/Series1XBee.h"
 
 
+#define DEBUG_AVIEUL  //define for serial debug messages
+
+
 class AvieulService;
 
 class AvieulSender {
@@ -31,10 +34,10 @@ public:
 	void process(XBeeAddress from, uint8_t* request, uint8_t request_length);
 
 protected:
-	void processCall(uint16_t callType, XBeeAddress from, uint8_t* payload, uint8_t payload_length);
-	bool processRequest(uint16_t requestType, XBeeAddress from, uint8_t* payload, uint8_t payload_length);
-	bool addSubscription(XBeeAddress from, uint16_t subscriptionType);
-	void removeSubscription(XBeeAddress from, uint16_t subscriptionType);
+	virtual void processCall(uint16_t callType, XBeeAddress from, uint8_t* payload, uint8_t payload_length);
+	virtual bool processRequest(uint16_t requestType, XBeeAddress from, uint8_t* payload, uint8_t payload_length);
+	virtual bool addSubscription(XBeeAddress from, uint16_t subscriptionType);
+	virtual void removeSubscription(XBeeAddress from, uint16_t subscriptionType);
 
 	/**
 	 * Fills the first 4 bytes of the response
@@ -70,7 +73,6 @@ private:
 	Series1XBee *_xbee;
 	AvieulService **_services;
 	uint8_t _services_count;
-	uint8_t _buffer[255];
 };
 
 

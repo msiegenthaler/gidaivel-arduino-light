@@ -1,10 +1,10 @@
 #import "Avieul.h"
 
 
-//AvieulService::AvieulService(uint32_t type, uint8_t version) {
-//	_type = type;
-//	_version = version;
-//}
+/*********************
+ *   AvieulService   *
+ *********************/
+
 
 void AvieulService::initialize(uint8_t index, AvieulSender *sender) {
 	_index = index;
@@ -73,17 +73,46 @@ void AvieulService::fillResponseHeader(uint8_t *buffer, uint16_t requestType) {
 }
 
 void AvieulService::processCall(uint16_t callType, XBeeAddress from, uint8_t* payload, uint8_t payload_length) {
+#ifdef DEBUG_AVIEUL
+	Serial.print("A-srv ");
+	Serial.print(_type, HEX);
+	Serial.print(" does not support call ");
+	Serial.println(callType, HEX);
+#endif
 }
 bool AvieulService::processRequest(uint16_t requestType, XBeeAddress from, uint8_t* payload, uint8_t payload_length) {
+#ifdef DEBUG_AVIEUL
+	Serial.print("A-srv ");
+	Serial.print(_type, HEX);
+	Serial.print(" does not support request ");
+	Serial.println(requestType, HEX);
+#endif
 	return false;
 }
 bool AvieulService::addSubscription(XBeeAddress from, uint16_t subscriptionType) {
+#ifdef DEBUG_AVIEUL
+	Serial.print("A-srv ");
+	Serial.print(_type, HEX);
+	Serial.print(" does not support add subscription ");
+	Serial.println(subscriptionType, HEX);
+#endif
 	return false;
 }
 void AvieulService::removeSubscription(XBeeAddress from, uint16_t subscriptionType) {
+#ifdef DEBUG_AVIEUL
+	Serial.print("A-srv ");
+	Serial.print(_type, HEX);
+	Serial.print(" does not support remove subscription ");
+	Serial.println(subscriptionType, HEX);
+#endif
 }
 
 
+
+
+/**************
+ *   Avieul   *
+ **************/
 
 Avieul::Avieul(Series1XBee *xbee, AvieulService **services, uint8_t service_count) {
 	_xbee = xbee;
@@ -93,7 +122,15 @@ Avieul::Avieul(Series1XBee *xbee, AvieulService **services, uint8_t service_coun
 		_services[i] = services[i];
 		_services[i]->initialize(i, this);
 	}
+#ifdef DEBUG_AVIEUL
+	Serial.print("A-Started (");
+	Serial.print(_services_count, 10);
+	Serial.println(" srvs)");
+#endif
 	announce(BROADCAST_ADDRESS);
+#ifdef DEBUG_AVIEUL
+	Serial.println("A-broadcast");
+#endif
 }
 
 void Avieul::send(XBeeAddress to, uint8_t* data, uint8_t data_length) {
@@ -108,11 +145,21 @@ void Avieul::handle(XBeeAddress from, uint8_t* data, uint8_t data_length) {
 		//General messages
 		if (messageType == 0x01) { //RequestInfo
 			//Announce us
-
+#ifdef DEBUG_AVIEUL
+			Serial.println("A-rcv RequestInfo: Announcing");
+#endif
+			announce(from);
 		} else if (messageType == 0x02) { //AnnounceService
 			//ignore announcements
+#ifdef DEBUG_AVIEUL
+			Serial.println("A-rcv AnnouceService: Ignore.");
+#endif
 		} else {
 			//unknown request, ignore
+#ifdef DEBUG_AVIEUL
+			Serial.print("A-rcv: unknown msg-type: ");
+			Serial.println(messageType, HEX);
+#endif
 		}
 	} else {
 		if (isBroadcastAddress(from)) return; //do not accept broadcasts
@@ -124,16 +171,26 @@ void Avieul::handle(XBeeAddress from, uint8_t* data, uint8_t data_length) {
 			//call to an unknown services
 			uint8_t data[] = {0x10, serviceIndex}; //UnknownService
 			_xbee->send(from, data, 2);
+#ifdef DEBUG_AVIEUL
+			Serial.print("A-rcv: for unknown service index=");
+			Serial.println(serviceIndex, HEX);
+#endif
 			return;
 		} else {
 			//forward call to the appropriate service
+#ifdef DEBUG_AVIEUL
+			Serial.print("A-rcv: type=");
+			Serial.print(messageType, HEX);
+			Serial.print(" for service 0x");
+			Serial.println(_services[serviceIndex]->getType(), HEX);
+#endif
 			_services[serviceIndex]->process(from, data, data_length);
 		}
 	}
 }
 
 void Avieul::announce(XBeeAddress to) {
-	uint8_t size = 1 + 3*_services_count;
+	uint8_t size = 1 + 6*_services_count;
 	uint8_t *data = (uint8_t*) malloc(size * sizeof(uint8_t));
 	data[0] = 0x02;
 	for (uint8_t i=0; i<_services_count; i++) {
@@ -148,13 +205,17 @@ void Avieul::announce(XBeeAddress to) {
 	}
 	_xbee->send(to, data, size);
 	free(data);
+#ifdef DEBUG_AVIEUL
+	Serial.println("A-snd: AnnounceServices");
+#endif
 }
 
 void Avieul::process() {
 	if (_xbee->available()) {
 		XBeeAddress from = 0;
 		uint8_t length = 0;
-		_xbee->receive(&from, (uint8_t**)&_buffer, &length);
-		handle(from, _buffer, length);
+		uint8_t *data;
+		_xbee->receive(&from, &data, &length);
+		handle(from, data, length);
 	}
 }

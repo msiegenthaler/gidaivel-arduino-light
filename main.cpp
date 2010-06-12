@@ -1,8 +1,8 @@
 #include "WProgram.h"
 #include "arduino-xbee/Series1XBee.h"
 #include "arduino-xbee/NewSoftSerialApiModeXBee.h"
-//#include "OnOffLightService.h"
-//#include "Avieul.h"
+#include "OnOffLightService.h"
+#include "Avieul.h"
 
 // general definitions
 extern "C" void __cxa_pure_virtual(void);
@@ -29,7 +29,7 @@ int xbeeSendPin = 3;
 NewSoftSerial *serial;
 LowlevelXBee *lowlevel;
 Series1XBee *xbee;
-//Avieul *avieul;
+Avieul *avieul;
 
 void setup() {
 #ifdef DEBUG_PRINTS
@@ -40,13 +40,14 @@ void setup() {
 	serial->begin(19200);
 	lowlevel = new NewSoftSerialApiModeXBee(serial);
 	xbee = new Series1XBee(lowlevel);
-/*
-	OnOffLightService *onOff = new OnOffLightService(13);
-	AvieulService* services[] = { onOff };
-	avieul = new Avieul(xbee, services, 1);
-*/
+
 	pinMode(ledPin, OUTPUT); // sets the digital pin as output
 	digitalWrite(ledPin, HIGH);
+	OnOffLightService *onOff = new OnOffLightService(ledPin);
+
+	AvieulService* services[] = { onOff };
+	avieul = new Avieul(xbee, services, 1);
+
 
 #ifdef DEBUG_PRINTS
 	Serial.println("Started");
@@ -57,27 +58,32 @@ void setup() {
 void printHex(uint8_t *data, uint8_t len, bool seperate);
 void printAddress(uint64_t address);
 
+
 void loop() {
-	bool oldVal = digitalRead(ledPin) == HIGH;
-	digitalWrite(ledPin, oldVal ? LOW : HIGH);
-
-	if (xbee->available()) {
-		XBeeAddress address;
-		uint8_t *data;
-		uint8_t len;
-		xbee->receive(&address, &data, &len);
-
-		Serial.print("incoming message '");
-		printHex(data, len, true);
-		Serial.print("' from ");
-		printAddress(address);
-		Serial.println();
-	}
-
-	delay(500);
+	avieul->process();
 }
 
 
+// Print all received packages to the serial output
+//void loop_xbee_receive() {
+//	bool oldVal = digitalRead(ledPin) == HIGH;
+//	digitalWrite(ledPin, oldVal ? LOW : HIGH);
+//
+//	if (xbee->available()) {
+//		XBeeAddress address;
+//		uint8_t *data;
+//		uint8_t len;
+//		xbee->receive(&address, &data, &len);
+//
+//		Serial.print("incoming message '");
+//		printHex(data, len, true);
+//		Serial.print("' from ");
+//		printAddress(address);
+//		Serial.println();
+//	}
+//
+//	delay(500);
+//}
 
 
 

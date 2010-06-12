@@ -3,6 +3,8 @@
 
 #include "Avieul.h"
 
+#define DEBUG_ASRVS
+
 /**
  * Light that can be turned on or off.
  */
@@ -11,7 +13,7 @@ public:
 	OnOffLightService(int pin);
 
 protected:
-	bool processRequest(uint16_t requestType, XBeeAddress from, uint8_t* payload, uint8_t payload_length);
+	virtual bool processRequest(uint16_t requestType, XBeeAddress from, uint8_t* payload, uint8_t payload_length);
 
 	bool currentValue();
 	void setValue(bool on);
