@@ -2,7 +2,7 @@
 
 OnOffLightService::OnOffLightService(int pin) {
 	_type = 0x12;
-	_version = 0x01;
+	_version = 0x00;
 	_pin = pin;
 }
 
