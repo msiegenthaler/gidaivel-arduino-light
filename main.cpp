@@ -1,8 +1,8 @@
 #include "WProgram.h"
-#include "arduino-xbee/Series1XBee.h"
-#include "arduino-xbee/NewSoftSerialApiModeXBee.h"
+#include "../arduino-xbee/Series1XBee.h"
+#include "../arduino-xbee/NewSoftSerialApiModeXBee.h"
+#include "../gidaivel-arduino-base/Avieul.h"
 #include "OnOffLightService.h"
-#include "Avieul.h"
 
 // general definitions
 extern "C" void __cxa_pure_virtual(void);
@@ -23,8 +23,8 @@ void blink(int n, int d);
 
 // variables
 int ledPin = 13; // LED connected to digital pin 13
-int xbeeRcvPin = 2;
-int xbeeSendPin = 3;
+int xbeeRcvPin = 7;
+int xbeeSendPin = 6;
 
 NewSoftSerial *serial;
 LowlevelXBee *lowlevel;
