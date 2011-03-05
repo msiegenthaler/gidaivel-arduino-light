@@ -1,6 +1,7 @@
 #include "WProgram.h"
 #include "../arduino-xbee/Series1XBee.h"
 #include "../arduino-xbee/NewSoftSerialApiModeXBee.h"
+#include "../arduino-xbee/HardSerialApiModeXBee.h"
 #include "../gidaivel-arduino-base/Avieul.h"
 #include "OnOffLightService.h"
 
@@ -26,7 +27,7 @@ int ledPin = 13; // LED connected to digital pin 13
 int xbeeRcvPin = 7;
 int xbeeSendPin = 6;
 
-NewSoftSerial *serial;
+//NewSoftSerial *serial;
 LowlevelXBee *lowlevel;
 Series1XBee *xbee;
 Avieul *avieul;
@@ -36,13 +37,16 @@ void setup() {
 	Serial.begin(9600);
 #endif
 
-	serial = new NewSoftSerial(xbeeRcvPin, xbeeSendPin);
-	serial->begin(19200);
-	lowlevel = new NewSoftSerialApiModeXBee(serial);
+
+	//serial = new NewSoftSerial(xbeeRcvPin, xbeeSendPin);
+	//serial->begin(19200);
+	Serial1.begin(19200);
+	//lowlevel = new NewSoftSerialApiModeXBee(serial);
+	lowlevel = new HardSerialApiModeXBee(&Serial1);
 	xbee = new Series1XBee(lowlevel);
 
 	pinMode(ledPin, OUTPUT); // sets the digital pin as output
-	digitalWrite(ledPin, HIGH);
+	digitalWrite(ledPin, LOW);
 	OnOffLightService *onOff = new OnOffLightService(ledPin);
 
 	AvieulService* services[] = { onOff };
