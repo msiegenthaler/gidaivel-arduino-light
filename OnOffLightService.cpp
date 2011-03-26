@@ -1,15 +1,21 @@
 #include "OnOffLightService.h"
 
+
 OnOffLightService::OnOffLightService(int pin) {
 	_type = 0x12;
 	_version = 0x00;
 	_pin = pin;
+	_subscription = new SubscriptionManager(_sender);
 }
 
 void OnOffLightService::processCall(uint16_t callType, XBeeAddress from, uint8_t* payload, uint8_t payload_length) {
 	switch (callType) {
 	case 0x0001: { //set on/off
 		bool on = payload[0] == 0x01;
+#ifdef DEBUG_ASRVS
+		Serial.print("Turn light to ");
+		Serial.println(on);
+#endif
 		setValue(on);
 		break;
 	}
@@ -21,6 +27,9 @@ void OnOffLightService::processCall(uint16_t callType, XBeeAddress from, uint8_t
 bool OnOffLightService::processRequest(uint16_t requestType, XBeeAddress from, uint8_t* payload, uint8_t payload_length) {
 	switch (requestType) {
 	case 0x0001: { //is on?
+#ifdef DEBUG_ASRVS
+		Serial.println("Request for current status");
+#endif
 		uint8_t value = currentValue() ? 0x01 : 0x00;
 		uint8_t data[] = { 0, 0, 0, 0, value };
 		fillResponseHeader(data, requestType);
@@ -34,7 +43,7 @@ bool OnOffLightService::processRequest(uint16_t requestType, XBeeAddress from, u
 bool OnOffLightService::addSubscription(XBeeAddress from, uint16_t subscriptionType) {
 	switch (subscriptionType) {
 	case 0x0001: // on/off changes
-		addSubscriber(from);
+		_subscription->add(from);
 		return true;
 
 	default: return false;
@@ -43,55 +52,19 @@ bool OnOffLightService::addSubscription(XBeeAddress from, uint16_t subscriptionT
 void OnOffLightService::removeSubscription(XBeeAddress from, uint16_t subscriptionType) {
 	switch (subscriptionType) {
 	case 0x0001: //on/off change
-		removeSubscriber(from);
+		_subscription->remove(from);
 		break;
 
 	default: break;
 	}
 }
 
-inline bool exists(XBeeAddress *all, uint8_t count, XBeeAddress toFind) {
-	for (uint8_t i=0; i<count; i++) {
-		if (all[i] == toFind) return true;
-	}
-	return false;
-}
 
-void OnOffLightService::addSubscriber(XBeeAddress from) {
-	if (exists(_subscribers, _subscriber_count, from)) return; //already subscribed
-
-	size_t size = sizeof(XBeeAddress) * (_subscriber_count + 1);
-	XBeeAddress* na = (XBeeAddress*)malloc(size);
-	memcpy(na, _subscribers, size);
-	na[_subscriber_count] = from;
-	free(_subscribers);
-	_subscribers = na;
-	_subscriber_count++;
-}
-
-void OnOffLightService::removeSubscriber(XBeeAddress from) {
-	if (!exists(_subscribers, _subscriber_count, from)) return; //not subscribed
-
-	size_t size = sizeof(XBeeAddress) * (_subscriber_count - 1);
-	XBeeAddress* na = (XBeeAddress*)malloc(size);
-	uint8_t c=0;
-	for (uint8_t i=0; i<_subscriber_count; i++) {
-		if (_subscribers[i] == from) break;
-		na[c++] = _subscribers[i];
-	}
-	free(_subscribers);
-	_subscribers = na;
-	_subscriber_count = c;
-}
-
-void OnOffLightService::notifySubscribers() {
+void OnOffLightService::stateChanged() {
 	uint8_t data[5]; // 4 + 1
 	fillPublishHeader(data, 0x0001);
 	data[4] = currentValue() ? 0x1 : 0x0;
-
-	for (uint8_t i=0; i < _subscriber_count; i++) {
-		_sender->send(_subscribers[i], data, 5);
-	}
+	_subscription->publish(data, 5);
 }
 
 
@@ -101,5 +74,5 @@ bool OnOffLightService::currentValue() {
 
 void OnOffLightService::setValue(bool on) {
 	digitalWrite(_pin, on ? HIGH : LOW);
-	notifySubscribers();
+	stateChanged();
 }

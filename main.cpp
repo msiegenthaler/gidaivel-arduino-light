@@ -1,3 +1,5 @@
+#define DEBUG_PRINTS 1
+
 #include "WProgram.h"
 #include "../arduino-xbee/Series1XBee.h"
 #include "../arduino-xbee/NewSoftSerialApiModeXBee.h"
@@ -16,7 +18,6 @@ void * operator new(size_t size) {
 // end of general definitions
 
 
-#define DEBUG_PRINTS 1
 
 
 // prototypes
@@ -34,7 +35,7 @@ Avieul *avieul;
 
 void setup() {
 #ifdef DEBUG_PRINTS
-	Serial.begin(9600);
+	Serial.begin(19200);
 #endif
 
 

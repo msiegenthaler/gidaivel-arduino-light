@@ -2,6 +2,7 @@
 #define ONOFFLIGHTSERVICE_H_
 
 #include "../gidaivel-arduino-base/Avieul.h"
+#include "../gidaivel-arduino-base/SubscriptionManager.h"
 
 #define DEBUG_ASRVS
 
@@ -22,15 +23,11 @@ protected:
 	void setValue(bool on);
 
 private:
-	inline void addSubscriber(XBeeAddress from);
-	inline void removeSubscriber(XBeeAddress from);
-	inline void notifySubscribers();
+	inline void stateChanged();
 
 private:
 	int _pin;
-
-	XBeeAddress *_subscribers;
-	uint8_t _subscriber_count;
+	SubscriptionManager *_subscription;
 };
 
 #endif /* ONOFFLIGHTSERVICE_H_ */
